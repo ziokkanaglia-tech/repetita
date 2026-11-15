@@ -127,7 +127,9 @@ export function saveExercise(state, id, data) {
   if (id) { Object.assign(state.exercises.find(e => e.id === id), clean); touch(state); return id; }
   const nid = uid(); state.exercises.push({ id: nid, ...clean, fav: false, hidden: false, preset: false }); touch(state); return nid;
 }
-export function toggleFav(state, id) { const e = state.exercises.find(x => x.id === id); if (!e) return false; e.fav = !e.fav; return e.fav; }
+export function toggleFav(state, id) { const e = state.exercises.find(x => x.id === id); if (!e) return false; e.fav = !e.fav; if (e.fav) e.dislike = false; return e.fav; }
+/** «Non mi piace»: l'esercizio non viene più proposto nei consigli (ma resta usabile). */
+export function toggleDislike(state, id) { const e = state.exercises.find(x => x.id === id); if (!e) return false; e.dislike = !e.dislike; if (e.dislike) e.fav = false; return e.dislike; }
 export function hideExercise(state, id) { const e = state.exercises.find(x => x.id === id); if (e) e.hidden = true; }
 export function addMeasure(state, m) { state.body.push({ id: uid(), ...m }); }
 export function deleteMeasure(state, id) { state.body = state.body.filter(b => b.id !== id); }

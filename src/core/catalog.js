@@ -1,12 +1,12 @@
 // Catalogo: muscoli, attrezzi, schemi di movimento, tipi di esercizio e gli esercizi già pronti.
 import { norm } from './util.js';
 
-export const MUSCLES = ['Petto', 'Schiena', 'Spalle', 'Bicipiti', 'Tricipiti', 'Avambracci', 'Quadricipiti', 'Femorali', 'Glutei', 'Polpacci', 'Addome', 'Cardio'];
+export const MUSCLES = ['Petto', 'Schiena', 'Spalle', 'Bicipiti', 'Tricipiti', 'Avambracci', 'Quadricipiti', 'Femorali', 'Glutei', 'Polpacci', 'Addome', 'Corpo intero', 'Cardio'];
 export const EQUIP = ['Bilanciere', 'Manubri', 'Cavi', 'Macchina', 'Corpo libero', 'Kettlebell', 'Altro'];
 export const PATTERNS = {
   'spinta-o': 'Spinta orizzontale', 'spinta-v': 'Spinta verticale', 'tirata-o': 'Tirata orizzontale', 'tirata-v': 'Tirata verticale',
   squat: 'Squat', hinge: "Piegamento d'anca", affondo: 'Affondi', croci: 'Croci', laterali: 'Alzate', curl: 'Curl',
-  estensione: 'Estensioni', 'leg-ext': 'Estensione gamba', 'leg-curl': 'Flessione gamba', polpacci: 'Polpacci', core: 'Core', cardio: 'Cardio', altro: 'Altro'
+  estensione: 'Estensioni', 'leg-ext': 'Estensione gamba', 'leg-curl': 'Flessione gamba', polpacci: 'Polpacci', core: 'Core', olimpico: 'Alzata olimpica', esplosivo: 'Esplosivo', trasporto: 'Trasporto', skill: 'Skill a corpo libero', cardio: 'Cardio', altro: 'Altro'
 };
 /** Cosa si registra per ogni tipo di esercizio. */
 export const TYPES = {
@@ -67,7 +67,7 @@ export const PRESETS = [
   ['Panca presa stretta', 'Tricipiti', 'kg_reps', 'spinta-o', 'Bilanciere'],
   ['Dip tra due panche', 'Tricipiti', 'reps', 'estensione', 'Corpo libero'],
   ['Wrist curl', 'Avambracci', 'kg_reps', 'curl', 'Manubri'],
-  ['Farmer walk', 'Avambracci', 'time', 'altro', 'Manubri'],
+  ['Farmer walk', 'Avambracci', 'time', 'trasporto', 'Manubri'],
   ['Squat', 'Quadricipiti', 'kg_reps', 'squat', 'Bilanciere'],
   ['Front squat', 'Quadricipiti', 'kg_reps', 'squat', 'Bilanciere'],
   ['Goblet squat', 'Quadricipiti', 'kg_reps', 'squat', 'Manubri'],
@@ -101,7 +101,55 @@ export const PRESETS = [
   ['Cyclette', 'Cardio', 'cardio', 'cardio', 'Macchina'],
   ['Ellittica', 'Cardio', 'cardio', 'cardio', 'Macchina'],
   ['Vogatore', 'Cardio', 'cardio', 'cardio', 'Macchina'],
-  ['Corda', 'Cardio', 'time', 'cardio', 'Altro']
+  ['Corda', 'Cardio', 'time', 'cardio', 'Altro'],
+  // powerlifting: varianti di gara
+  ['Squat con fermo', 'Quadricipiti', 'kg_reps', 'squat', 'Bilanciere'],
+  ['Panca con fermo', 'Petto', 'kg_reps', 'spinta-o', 'Bilanciere'],
+  ['Stacco sumo', 'Glutei', 'kg_reps', 'hinge', 'Bilanciere'],
+  ['Stacco in deficit', 'Schiena', 'kg_reps', 'hinge', 'Bilanciere'],
+  // pesistica olimpica
+  ['Strappo', 'Corpo intero', 'kg_reps', 'olimpico', 'Bilanciere'],
+  ['Girata e slancio', 'Corpo intero', 'kg_reps', 'olimpico', 'Bilanciere'],
+  ['Power clean', 'Corpo intero', 'kg_reps', 'olimpico', 'Bilanciere'],
+  ['Power snatch', 'Corpo intero', 'kg_reps', 'olimpico', 'Bilanciere'],
+  ['Girata dalla sospensione', 'Corpo intero', 'kg_reps', 'olimpico', 'Bilanciere'],
+  ['Tirata di strappo', 'Schiena', 'kg_reps', 'olimpico', 'Bilanciere'],
+  ['Tirata di girata', 'Schiena', 'kg_reps', 'olimpico', 'Bilanciere'],
+  ['Split jerk', 'Spalle', 'kg_reps', 'olimpico', 'Bilanciere'],
+  ['Push press', 'Spalle', 'kg_reps', 'spinta-v', 'Bilanciere'],
+  ['Overhead squat', 'Quadricipiti', 'kg_reps', 'squat', 'Bilanciere'],
+  ['Box jump', 'Quadricipiti', 'reps', 'esplosivo', 'Altro'],
+  // calisthenics
+  ['Muscle-up', 'Schiena', 'reps', 'skill', 'Corpo libero'],
+  ['Front lever', 'Schiena', 'time', 'skill', 'Corpo libero'],
+  ['Back lever', 'Schiena', 'time', 'skill', 'Corpo libero'],
+  ['Planche', 'Spalle', 'time', 'skill', 'Corpo libero'],
+  ['Verticale', 'Spalle', 'time', 'skill', 'Corpo libero'],
+  ['L-sit', 'Addome', 'time', 'skill', 'Corpo libero'],
+  ['Handstand push-up', 'Spalle', 'reps', 'spinta-v', 'Corpo libero'],
+  ['Pike push-up', 'Spalle', 'reps', 'spinta-v', 'Corpo libero'],
+  ['Trazioni australiane', 'Schiena', 'reps', 'tirata-o', 'Corpo libero'],
+  ['Pistol squat', 'Quadricipiti', 'reps', 'affondo', 'Corpo libero'],
+  // streetlifting
+  ['Trazioni zavorrate', 'Schiena', 'kg_reps', 'tirata-v', 'Altro'],
+  ['Dip zavorrati', 'Petto', 'kg_reps', 'spinta-o', 'Altro'],
+  ['Muscle-up zavorrato', 'Schiena', 'kg_reps', 'skill', 'Altro'],
+  // crossfit
+  ['Thruster', 'Corpo intero', 'kg_reps', 'esplosivo', 'Bilanciere'],
+  ['Wall ball', 'Corpo intero', 'reps', 'esplosivo', 'Altro'],
+  ['Kettlebell swing', 'Glutei', 'kg_reps', 'hinge', 'Kettlebell'],
+  ['Burpee', 'Corpo intero', 'reps', 'esplosivo', 'Corpo libero'],
+  ['Double under', 'Cardio', 'reps', 'cardio', 'Altro'],
+  ['Toes to bar', 'Addome', 'reps', 'core', 'Corpo libero'],
+  ['Air bike', 'Cardio', 'cardio', 'cardio', 'Macchina'],
+  // strongman
+  ['Atlas stone', 'Corpo intero', 'kg_reps', 'trasporto', 'Altro'],
+  ['Log press', 'Spalle', 'kg_reps', 'spinta-v', 'Altro'],
+  ['Yoke', 'Corpo intero', 'time', 'trasporto', 'Altro'],
+  ['Stacco con axle', 'Schiena', 'kg_reps', 'hinge', 'Bilanciere'],
+  ['Spinta della slitta', 'Quadricipiti', 'time', 'trasporto', 'Altro'],
+  ['Ribaltamento pneumatico', 'Corpo intero', 'reps', 'trasporto', 'Altro'],
+  ['Trasporto sacco', 'Corpo intero', 'time', 'trasporto', 'Altro']
 ];
 
 const slug = s => 'p-' + norm(s).replace(/[^a-z0-9]+/g, '-');

@@ -5,6 +5,7 @@ import { PATTERNS } from './catalog.js';
 import { getEx, visibleExercises, index, work } from './metrics.js';
 import { sum, DAY } from './util.js';
 import { excluded } from './profile.js';
+import { DISCIPLINES, affinity, affinityWhy } from './disciplines.js';
 
 const OPPOSITES = [['Petto', 'Schiena'], ['Quadricipiti', 'Femorali'], ['Bicipiti', 'Tricipiti']];
 const MAJOR = ['Petto', 'Schiena', 'Spalle', 'Quadricipiti', 'Femorali', 'Glutei', 'Bicipiti', 'Tricipiti', 'Addome'];
@@ -29,7 +30,8 @@ export function profile(state, days = 60, now = Date.now()) {
   }
   const eqTot = sum(Object.values(eq)) || 1;
   const prof = state.profile || null;
-  return { cnt, mus, eq, pair, total, now, prof, avoidM: new Set(prof ? prof.avoid : []), last: index(state).last, eqPref: e => (eq[e] || 0) / eqTot };
+  const disc = prof ? prof.disciplines : [], focus = new Set(prof ? prof.focus : []);
+  return { cnt, mus, eq, pair, total, now, prof, disc, focus, avoidM: new Set(prof ? prof.avoid : []), last: index(state).last, eqPref: e => (eq[e] || 0) / eqTot };
 }
 
 /** Quanto un esercizio è adatto a te: attrezzi che usi, preferiti, novità, non appena fatto. */
@@ -37,6 +39,9 @@ function score(c, P, avoid) {
   if (c.hidden || (avoid && avoid.has(c.id)) || excluded(P.prof, c)) return -1;
   let s = 1 + P.eqPref(c.equip) * 3;
   if (c.fav) s += 2.5;
+  if (c.dislike) s -= 4;
+  if (P.disc.length) s += affinity(P.disc, c) * 0.9;     // quanto è tipico delle tue discipline
+  if (P.focus.has(c.muscle)) s += 0.8;                    // muscoli che vuoi sviluppare
   const last = P.last[c.id];
   if (!last) s += 0.6; else if (P.now - last < 10 * DAY) s -= 1.2;
   return s;
@@ -54,7 +59,8 @@ export function alternatives(state, exId, n = 5, avoid = [], now = Date.now()) {
     const same = c.pattern === ex.pattern;
     const why = same ? (c.equip !== ex.equip ? `Stesso movimento, con ${c.equip.toLowerCase()}` : 'Stesso movimento, variante')
       : `Lavora sempre ${ex.muscle.toLowerCase()}, angolo diverso`;
-    return { ex: c, why: why + (c.fav ? ' · tra i preferiti' : '') };
+    const dw = affinityWhy(P.disc, c);
+    return { ex: c, why: why + (dw ? ' · ' + dw : '') + (c.fav ? ' · tra i preferiti' : '') };
   });
 }
 
@@ -64,6 +70,12 @@ export function suggestions(state, now = Date.now()) {
   if (P.total < MIN_SETS) return { out, few: true };
   const used = new Set(Object.keys(P.cnt));
   const add = (ex, kind, why) => { if (ex && !out.some(o => o.ex.id === ex.id)) out.push({ ex, kind, why }); };
+  const main = DISCIPLINES[P.disc[0]];
+  if (main) {                                                // 0) i fondamentali della tua disciplina che stai trascurando
+    const byId = new Map(state.exercises.map(e => [e.id, e]));
+    main.core.map(id => byId.get(id)).filter(ex => ex && score(ex, P, null) >= 0 && !P.cnt[ex.id]).slice(0, 2)
+      .forEach(ex => add(ex, 'Disciplina', `Fondamentale nel ${main.name.toLowerCase()}: ${P.last[ex.id] ? 'non lo fai da più di un mese' : 'non l\'hai ancora mai fatto'}`));
+  }
 
   for (const [a, b] of OPPOSITES) {                         // 1) muscoli opposti sbilanciati
     const x = P.mus[a] || 0, y = P.mus[b] || 0, hi = Math.max(x, y), lo = Math.min(x, y);
@@ -75,10 +87,10 @@ export function suggestions(state, now = Date.now()) {
   }
   const trained = MAJOR.map(m => P.mus[m] || 0).filter(v => v > 0).sort((a, b) => a - b);   // 2) muscoli trascurati
   const median = trained.length ? trained[Math.floor(trained.length / 2)] : 0;
-  for (const m of MAJOR) {
+  for (const m of [...P.focus, ...MAJOR.filter(x => !P.focus.has(x))]) {
     const v = P.mus[m] || 0;
     if (median >= MIN_SETS && v < median * 0.25 && !P.avoidM.has(m) && !out.some(o => o.ex.muscle === m))
-      add(bestFor(state, m, P, used)[0], 'Poco allenato', v ? `Solo ${v} serie di ${m.toLowerCase()} in 30 giorni` : `Nessuna serie di ${m.toLowerCase()} in 30 giorni`);
+      add(bestFor(state, m, P, used)[0], 'Poco allenato', (v ? `Solo ${v} serie di ${m.toLowerCase()} in 30 giorni` : `Nessuna serie di ${m.toLowerCase()} in 30 giorni`) + (P.focus.has(m) ? ', ed è tra i muscoli che vuoi sviluppare' : ''));
   }
   const top = Object.entries(P.mus).filter(([m]) => m !== 'Cardio').sort((a, b) => b[1] - a[1]).slice(0, 3);   // 3) novità
   for (const [m] of top) {
@@ -89,7 +101,7 @@ export function suggestions(state, now = Date.now()) {
     const alt = alternatives(state, id, 1, [...used], now)[0];
     if (alt) add(alt.ex, 'Variante', `Ogni tanto al posto di ${getEx(state, id).name}: ${alt.why.toLowerCase()}`);
   }
-  return { out: out.slice(0, 8), few: false };
+  return { out: out.slice(0, 9), few: false };
 }
 
 /** Cosa aggiungere a una scheda o a un allenamento che contiene già questi esercizi. */

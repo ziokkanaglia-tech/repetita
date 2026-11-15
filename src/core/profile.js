@@ -2,6 +2,7 @@
 // Qui solo dati e regole pure; le statistiche "di sempre" stanno in metrics.js.
 import { MUSCLES } from './catalog.js';
 import { has, num } from './util.js';
+import { DISCIPLINES } from './disciplines.js';
 
 export const GOALS = {
   forza: { l: 'Forza', reps: '3-5', d: 'Carichi alti, poche ripetizioni' },
@@ -17,7 +18,9 @@ export const SETUPS = {
   corpo: { l: 'Solo corpo libero', equip: ['Corpo libero'] }
 };
 export const SEXES = { m: 'Uomo', f: 'Donna', x: 'Preferisco non dirlo' };
-export const DEFAULT_PROFILE = { name: '', photo: '', bio: '', sex: '', birth: '', height: '', goal: '', level: '', weeklyTarget: 0, setup: 'palestra', avoid: [], notes: '' };
+export const EXPERIENCE = { '0': 'Meno di 1 anno', '1': '1-3 anni', '3': '3-5 anni', '5': 'Più di 5 anni' };
+export const SESSION_MIN = [30, 45, 60, 75, 90, 120];
+export const DEFAULT_PROFILE = { name: '', photo: '', bio: '', sex: '', birth: '', height: '', goal: '', level: '', weeklyTarget: 0, setup: 'palestra', avoid: [], notes: '', disciplines: [], experience: '', sessionMin: 0, focus: [] };
 
 const oneOf = (v, obj) => (Object.prototype.hasOwnProperty.call(obj, v) ? v : '');
 const str = (v, max) => String(v ?? '').trim().slice(0, max);
@@ -35,7 +38,11 @@ export function normProfile(p) {
     weeklyTarget: Number.isFinite(wt) ? Math.min(7, Math.max(0, wt)) : DEFAULT_PROFILE.weeklyTarget,
     setup: oneOf(r.setup, SETUPS) || 'palestra',
     avoid: [...new Set((Array.isArray(r.avoid) ? r.avoid : []).filter(m => MUSCLES.includes(m)))],
-    notes: str(r.notes, 300)
+    notes: str(r.notes, 300),
+    disciplines: [...new Set((Array.isArray(r.disciplines) ? r.disciplines : []).filter(d => DISCIPLINES[d]))].slice(0, 3),
+    experience: oneOf(r.experience, EXPERIENCE),
+    sessionMin: SESSION_MIN.includes(Number(r.sessionMin)) ? Number(r.sessionMin) : 0,
+    focus: [...new Set((Array.isArray(r.focus) ? r.focus : []).filter(m => MUSCLES.includes(m)))].slice(0, 4)
   };
 }
 
@@ -61,7 +68,13 @@ export function bmiLabel(v) {
   return v < 18.5 ? 'sottopeso' : v < 25 ? 'normopeso' : v < 30 ? 'sovrappeso' : 'obesità';
 }
 /** Ripetizioni consigliate per il tuo obiettivo (usate come base nelle schede nuove). */
-export const defaultReps = p => (p && GOALS[p.goal] ? GOALS[p.goal].reps : '');
+export const defaultReps = p => {
+  if (!p) return '';
+  const d = DISCIPLINES[p.disciplines[0]];
+  return d ? d.reps : GOALS[p.goal] ? GOALS[p.goal].reps : '';
+};
+/** Recupero di base suggerito dalla disciplina principale (secondi), 0 se nessuna. */
+export const defaultRest = p => { const d = p && DISCIPLINES[p.disciplines[0]]; return d ? d.rest : 0; };
 /** true se l'esercizio non fa per te: muscolo da evitare o attrezzo che non hai. */
 export function excluded(p, ex) {
   if (!p || !ex) return false;
@@ -71,6 +84,6 @@ export function excluded(p, ex) {
 }
 /** Quanto è completo il profilo, da 0 a 1 (serve a invitarti a completarlo). */
 export function completeness(p) {
-  const fields = [p.name, p.birth, p.height, p.goal, p.level, p.sex];
+  const fields = [p.name, p.birth, p.height, p.goal, p.level, p.sex, p.disciplines.length > 0, p.experience];
   return fields.filter(Boolean).length / fields.length;
 }

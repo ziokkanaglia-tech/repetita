@@ -12,6 +12,8 @@ import './ui/views/history.js';
 import './ui/views/progress.js';
 import './ui/views/settings.js';
 import './ui/views/profile.js';
+import { coachKeydown } from './ui/views/coach.js';
+import './ui/views/disciplines.js';
 
 store.init(store.localAdapter(), { error: () => toast('Non riesco a salvare: memoria del telefono piena?', { ms: 4000 }) });
 applyTheme(store.getState().settings);
@@ -19,6 +21,7 @@ watchSystemTheme(() => store.getState().settings);
 
 bind(document, { backdrop: e => { if (e.target.id === 'sheet') { closeSheet(); return true; } return false; } });
 document.addEventListener('keydown', e => {
+  if (coachKeydown(e)) return;
   if (e.key === 'Escape' && sheetOpen()) { closeSheet(); return; }
   if (e.key !== 'Enter' || !e.target.matches('.sets input')) return;   // "Avanti" sulla tastiera: campo successivo
   e.preventDefault();

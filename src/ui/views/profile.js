@@ -7,7 +7,8 @@ import { stats, empty } from '../parts.js';
 import * as store from '../../core/store.js';
 import * as W from '../../core/workout.js';
 import { MUSCLES } from '../../core/catalog.js';
-import { GOALS, LEVELS, SETUPS, SEXES, age, bmi, bmiLabel, currentWeight, completeness } from '../../core/profile.js';
+import { GOALS, LEVELS, SETUPS, SEXES, EXPERIENCE, SESSION_MIN, age, bmi, bmiLabel, currentWeight, completeness } from '../../core/profile.js';
+import { DISCIPLINES } from '../../core/disciplines.js';
 import { lifetime, mainLifts, heatmap, streak, thisWeek } from '../../core/metrics.js';
 import { fmt, isoDay, dShort, clone } from '../../core/util.js';
 
@@ -19,7 +20,8 @@ view('profilo', st => {
   const p = st.profile, L = lifetime(st), w = currentWeight(st), a = age(p.birth), b = bmi(w, p.height);
   const wk = thisWeek(st), done = completeness(p);
   const lifts = mainLifts(st, w), anyLift = lifts.some(l => l.e1rm > 0);
-  const tags = [p.goal && GOALS[p.goal].l, p.level && LEVELS[p.level], SETUPS[p.setup].l].filter(Boolean);
+  const tags = [p.goal && GOALS[p.goal].l, p.level && LEVELS[p.level], p.experience && EXPERIENCE[p.experience], p.sessionMin && `${p.sessionMin} min a seduta`, SETUPS[p.setup].l].filter(Boolean);
+  const main = DISCIPLINES[p.disciplines[0]];
   const facts = [[a ? `${a} anni` : null], [p.height ? `${fmt(p.height, 0)} cm` : null], [w ? `${fmt(w)} kg` : null]].map(x => x[0]).filter(Boolean);
   const body = html`
     <div class="card profile-head">
@@ -30,7 +32,11 @@ view('profilo', st => {
         ${facts.length > 0 && html`<div class="small p-facts">${facts.join(' · ')}</div>`}
       </div>
     </div>
-    ${tags.length > 0 && html`<div class="ex-meta top">${tags.map(t => html`<span class="chip">${t}</span>`)}${p.avoid.length > 0 && html`<span class="chip k-Poco">Evito: ${p.avoid.join(', ').toLowerCase()}</span>`}</div>`}
+    ${main ? html`<button class="card tap disc-card" data-a="disc.open" data-id="${p.disciplines[0]}"><div class="row"><div class="badge">${main.short}</div><div class="grow"><div class="tiny muted">LA TUA DISCIPLINA</div><div class="t1 big">${main.name}</div></div>${IC.chev}</div>
+        <div class="small muted gap">${main.tagline}</div>
+        ${p.disciplines.length > 1 && html`<div class="small gap">Anche: ${p.disciplines.slice(1).map(id => DISCIPLINES[id].name).join(', ')}</div>`}</button>`
+      : html`<button class="routine" data-a="profile.edit"><div class="badge">${IC.list}</div><div class="grow"><div class="t1">Come ti piace allenarti?</div><div class="small muted">Bodybuilding, powerlifting, calisthenics… scegli le tue discipline</div></div>${IC.chev}</button>`}
+    ${tags.length > 0 && html`<div class="ex-meta top">${tags.map(t => html`<span class="chip">${t}</span>`)}${p.focus.length > 0 && html`<span class="chip k-Da">Priorità: ${p.focus.join(', ').toLowerCase()}</span>`}${p.avoid.length > 0 && html`<span class="chip k-Poco">Evito: ${p.avoid.join(', ').toLowerCase()}</span>`}</div>`}
     ${done < 1 && html`<button class="routine" data-a="profile.edit"><div class="ring" style="--p:${Math.round(done * 100)}"><span>${Math.round(done * 100)}%</span></div>
       <div class="grow"><div class="t1">Completa il profilo</div><div class="small muted">Obiettivo, livello e dati personali rendono più precisi consigli e schede</div></div>${IC.chev}</button>`}
 
@@ -50,7 +56,8 @@ view('profilo', st => {
 
     ${b && html`<div class="sec-title">Corpo</div><button class="card tap row" data-a="profile.body"><div class="grow"><div class="t1">BMI ${fmt(b)} · ${bmiLabel(b)}</div>
       <div class="small muted">Calcolato da peso e altezza. Indicativo: non distingue muscoli e grasso.</div></div>${IC.chev}</button>`}
-    ${p.notes && html`<div class="sec-title">Note</div><div class="card small">${p.notes}</div>`}`;
+    ${p.notes && html`<div class="sec-title">Note</div><div class="card small">${p.notes}</div>`}
+    <button class="routine gap" data-a="disc.list"><div class="badge">${IC.spark}</div><div class="grow"><div class="t1">Le discipline e gli studi</div><div class="small muted">Cosa dice la ricerca su ogni modo di allenarsi</div></div>${IC.chev}</button>`;
   return {
     title: 'Profilo', body,
     right: html`<button class="icon-btn" data-a="profile.edit" aria-label="Modifica profilo">${IC.edit}</button><button class="icon-btn" data-a="settings.open" aria-label="Impostazioni">${IC.gear}</button>`
@@ -84,11 +91,22 @@ view('profileEdit', st => {
       <div class="grid2"><div class="field"><label for="pHeight">Altezza (cm)</label><input id="pHeight" data-in="prof.f" data-f="height" inputmode="numeric" value="${d.height}" placeholder="178"></div>
         <div class="field"><label for="pWeight">Peso (kg)</label><input id="pWeight" data-in="prof.weight" inputmode="decimal" value="${String(ui.profWeight ?? '').replace('.', ',')}" placeholder="75,5"></div></div>
     </div>
+    <div class="sec-title">Il tuo modo di allenarti</div><div class="card">
+      <div class="small muted">Scegli fino a 3 discipline, in ordine di importanza: la prima è la principale.</div>
+      <div class="disc-pick gap">${Object.entries(DISCIPLINES).map(([k, x]) => { const i = d.disciplines.indexOf(k); return html`<button class="${i >= 0 ? 'on' : ''}" data-a="prof.disc" data-k="${k}">${i >= 0 && html`<span class="n">${i + 1}</span>`}<b>${x.name}</b><span>${x.tagline}</span></button>`; })}</div>
+      <button class="link small gap" data-a="disc.list">Non sai quale? Leggi le schede delle discipline</button>
+    </div>
     <div class="sec-title">Come ti alleni</div><div class="card">
       <div class="field"><label>Obiettivo</label><div class="choice">${Object.entries(GOALS).map(([k, g]) => html`<button class="${d.goal === k ? 'on' : ''}" data-a="prof.pick" data-f="goal" data-k="${k}"><b>${g.l}</b><span>${g.d} · ${g.reps} rip</span></button>`)}</div></div>
       <div class="field"><label>Livello</label><div class="seg">${Object.entries(LEVELS).map(([k, l]) => html`<button class="${d.level === k ? 'on' : ''}" data-a="prof.pick" data-f="level" data-k="${k}">${l}</button>`)}</div></div>
       <div class="field"><label>Allenamenti a settimana</label><div class="seg">${[1, 2, 3, 4, 5, 6, 7].map(n => html`<button class="${d.weeklyTarget === n ? 'on' : ''}" data-a="prof.pick" data-f="weeklyTarget" data-k="${n}">${n}</button>`)}</div></div>
+      <div class="field"><label>Da quanto ti alleni</label><div class="seg">${Object.entries(EXPERIENCE).map(([k, l]) => html`<button class="${d.experience === k ? 'on' : ''}" data-a="prof.pick" data-f="experience" data-k="${k}">${l.replace('Meno di 1 anno', '<1 anno').replace('Più di 5 anni', '5+ anni')}</button>`)}</div></div>
+      <div class="field"><label>Tempo per seduta (minuti)</label><div class="seg">${SESSION_MIN.map(n => html`<button class="${d.sessionMin === n ? 'on' : ''}" data-a="prof.pick" data-f="sessionMin" data-k="${n}">${n}</button>`)}</div></div>
       <div class="field"><label>Dove ti alleni</label><div class="seg">${Object.entries(SETUPS).map(([k, x]) => html`<button class="${d.setup === k ? 'on' : ''}" data-a="prof.pick" data-f="setup" data-k="${k}">${x.l.replace('A casa con manubri', 'Casa').replace('Palestra completa', 'Palestra').replace('Solo corpo libero', 'Corpo libero')}</button>`)}</div></div>
+    </div>
+    <div class="sec-title">Muscoli da sviluppare di più</div><div class="card">
+      <div class="small muted">Fino a 4: i consigli daranno loro la precedenza.</div>
+      <div class="chips wrap gap">${MUSCLES.filter(m => m !== 'Cardio' && m !== 'Corpo intero').map(m => html`<button class="chip ${d.focus.includes(m) ? 'on' : ''}" data-a="prof.focus" data-m="${m}">${m}</button>`)}</div>
     </div>
     <div class="sec-title">Da evitare</div><div class="card">
       <div class="small muted">Muscoli da non allenare (infortuni, fastidi): non te li proporrò nei consigli.</div>
@@ -109,7 +127,13 @@ on('profile.body', () => { ui.prog = 'body'; navigate('progressi'); });
 on('settings.open', () => { if (atRoot('profilo')) go('settings'); else navigate('profilo', [{ v: 'settings' }]); });
 onInput('prof.f', (v, d) => { if (ui.prof) ui.prof[d.f] = v; });
 onInput('prof.weight', v => { ui.profWeight = v; });
-on('prof.pick', d => { ui.prof[d.f] = d.f === 'weeklyTarget' ? Number(d.k) : (ui.prof[d.f] === d.k && d.f !== 'setup' ? '' : d.k); render(); });
+on('prof.pick', d => {
+  const num = d.f === 'weeklyTarget' || d.f === 'sessionMin', v = num ? Number(d.k) : d.k;
+  ui.prof[d.f] = ui.prof[d.f] === v && d.f !== 'setup' ? (num ? 0 : '') : v;    // toccare di nuovo la scelta la toglie
+  render();
+});
+on('prof.disc', d => { const a = ui.prof.disciplines, i = a.indexOf(d.k); if (i >= 0) a.splice(i, 1); else if (a.length < 3) a.push(d.k); else toast('Al massimo 3 discipline'); render(); });
+on('prof.focus', d => { const a = ui.prof.focus, i = a.indexOf(d.m); if (i >= 0) a.splice(i, 1); else if (a.length < 4) a.push(d.m); else toast('Al massimo 4 muscoli'); render(); });
 on('prof.avoid', d => { const a = ui.prof.avoid, i = a.indexOf(d.m); if (i >= 0) a.splice(i, 1); else a.push(d.m); render(); });
 on('profile.save', () => {
   const data = ui.prof, weight = ui.profWeight;

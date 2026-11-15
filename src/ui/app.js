@@ -4,7 +4,7 @@ import { html, raw, $, $$, on } from './dom.js';
 import { IC } from './icons.js';
 import { getState } from '../core/store.js';
 
-export const TABS = [['allena', 'Allena', IC.dumbbell], ['schede', 'Schede', IC.list], ['storico', 'Storico', IC.clock], ['progressi', 'Progressi', IC.chart], ['profilo', 'Profilo', IC.user]];
+export const TABS = [['allena', 'Allena', IC.dumbbell], ['schede', 'Schede', IC.list], ['coach', 'Coach', IC.spark], ['storico', 'Storico', IC.clock], ['progressi', 'Progressi', IC.chart], ['profilo', 'Profilo', IC.user]];
 /** Stato temporaneo dell'interfaccia (non salvato): filtri, bozze, scelte in corso. */
 export const ui = { prog: 'gen', mrange: 30, metric: {}, draft: null, pick: null, libq: '', libm: '', just: null };
 const nav = { tab: 'allena', stack: [] };

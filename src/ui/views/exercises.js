@@ -21,7 +21,7 @@ const byName = (a, b) => a.name.localeCompare(b.name, 'it');
 view('exercise', (st, c) => {
   const ex = getEx(st, c.id), ss = sessions(st, ex.id), m = metric(ex.type, ui.metric[ex.id]);
   const reps = ex.type === 'kg_reps' ? bestByReps(st, ex.id) : [];
-  const body = html`<div class="ex-meta top"><span class="chip">${ex.muscle || '—'}</span><span class="chip">${ex.equip}</span><span class="chip">${PATTERNS[ex.pattern]}</span></div>
+  const body = html`<div class="ex-meta top">${ex.dislike && html`<span class="chip k-Poco">Non ti piace</span>`}<span class="chip">${ex.muscle || '—'}</span><span class="chip">${ex.equip}</span><span class="chip">${PATTERNS[ex.pattern]}</span></div>
     ${ex.note && html`<div class="ex-note">${ex.note}</div>`}
     ${ss.length ? html`
       <div class="card">${seg('ex.metric', METRICS[ex.type].map(x => [x.k, x.l]), m.k, { id: ex.id })}<div class="gap">${lineChart(series(st, ex.id, m.k), { unit: m.u })}</div></div>
@@ -36,7 +36,8 @@ view('exercise', (st, c) => {
 on('ex.open', d => { closeSheet(); go('exercise', { id: d.id }); });
 on('ex.metric', d => { ui.metric[d.id] = d.k; render(); });
 on('ex.fav', d => { const fav = store.update(s => W.toggleFav(s, d.id)); toast(fav ? 'Aggiunto ai preferiti' : 'Tolto dai preferiti'); });
-on('ex.menu', d => menu(getEx(S(), d.id).name, [{ l: 'Modifica esercizio', a: 'ex.edit', d: { id: d.id } }, { l: 'Elimina esercizio', a: 'ex.hide', d: { id: d.id }, bad: true }]));
+on('ex.menu', d => { const e = getEx(S(), d.id); menu(e.name, [{ l: 'Modifica esercizio', a: 'ex.edit', d: { id: d.id } }, { l: e.dislike ? 'Mi piace di nuovo: torna nei consigli' : 'Non mi piace: non propormelo', a: 'ex.dislike', d: { id: d.id } }, { l: 'Elimina esercizio', a: 'ex.hide', d: { id: d.id }, bad: true }]); });
+on('ex.dislike', d => { closeSheet(); const v = store.update(s => W.toggleDislike(s, d.id)); toast(v ? 'Non te lo proporrò più' : 'Tornerà nei consigli'); });
 on('ex.hide', d => { closeSheet(); store.update(s => W.hideExercise(s, d.id), { undo: 'Esercizio eliminato', silent: true }); back(); toast("Esercizio eliminato dall'elenco", { undo: true }); });
 
 // ---- elenco
