@@ -113,7 +113,8 @@ export function streak(state, now = Date.now()) {
 }
 export function thisWeek(state, now = Date.now()) {
   const k = weekKey(now), list = state.workouts.filter(w => weekKey(w.start) === k);
-  return { list, days: new Set(list.map(w => dayIndex(w.start))), volume: sum(list.map(w => workoutVolume(state, w))), sets: sum(list.map(workoutSets)) };
+  const target = state.profile ? state.profile.weeklyTarget : 0;
+  return { list, target, days: new Set(list.map(w => dayIndex(w.start))), volume: sum(list.map(w => workoutVolume(state, w))), sets: sum(list.map(workoutSets)) };
 }
 export function weekly(state, now = Date.now(), n = 12) {
   const out = []; let k = weekKey(now);
@@ -141,4 +142,42 @@ export function setText(s, type, short) {
   if (type === 'reps') return `${s.reps || 0} rip`;
   if (type === 'time') return `${s.sec || 0} s`;
   return short ? `${f(s.km)} km` : `${f(s.km)} km · ${f(s.min)} min`;
+}
+
+/** Numeri di sempre per il profilo. */
+export function lifetime(state) {
+  const ws = state.workouts;
+  return {
+    workouts: ws.length,
+    hours: sum(ws.map(w => w.end - w.start)) / 36e5,
+    tons: sum(ws.map(w => workoutVolume(state, w))) / 1000,
+    sets: sum(ws.map(workoutSets)),
+    prs: sum(ws.map(w => (w.prs || []).length)),
+    since: ws.length ? Math.min(...ws.map(w => w.start)) : null
+  };
+}
+/** I grandi esercizi: miglior 1RM stimato e rapporto col peso corporeo. */
+export const MAIN_LIFTS = [['p-squat', 'Squat'], ['p-panca-piana-bilanciere', 'Panca piana'], ['p-stacco-da-terra', 'Stacco da terra'], ['p-military-press', 'Military press']];
+export function mainLifts(state, bodyWeight) {
+  return MAIN_LIFTS.map(([id, label]) => {
+    const best = mx(sessions(state, id).map(s => mx(work(s.it.sets).map(e1rm))));
+    return { id, label, e1rm: best, ratio: best && bodyWeight ? best / bodyWeight : 0 };
+  });
+}
+/** Calendario delle ultime `weeks` settimane: per ogni giorno quanti allenamenti. */
+export function heatmap(state, weeks = 17, now = Date.now()) {
+  const start = shiftWeek(weekKey(now), -(weeks - 1)), count = new Map();
+  for (const w of state.workouts) { const d = new Date(w.start); d.setHours(0, 0, 0, 0); count.set(d.getTime(), (count.get(d.getTime()) || 0) + 1); }
+  const today = new Date(now); today.setHours(0, 0, 0, 0);
+  const out = [];
+  for (let i = 0; i < weeks; i++) {
+    const col = [];
+    for (let j = 0; j < 7; j++) {
+      const d = new Date(start); d.setDate(d.getDate() + i * 7 + j);
+      const t = d.getTime();
+      col.push({ t, n: count.get(t) || 0, future: t > today.getTime() });
+    }
+    out.push(col);
+  }
+  return out;
 }

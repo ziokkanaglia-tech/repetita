@@ -117,7 +117,7 @@ on('pick.done', () => {
   if (!p.sel.length) { toast('Seleziona almeno un esercizio'); return; }
   const ids = [...p.sel];
   closeSheet();
-  if (p.mode === 'routine') { ids.forEach(id => ui.draft.items.push(newRoutineItem(id, S().settings.rest))); render(); }
+  if (p.mode === 'routine') { ids.forEach(id => ui.draft.items.push(newRoutineItem(id, S().settings.rest, W.routineReps(S())))); render(); }
   else store.update(s => W.addExercises(s, ids));
 });
 on('pick.new', () => { const p = ui.pick; ui.pickBack = p; exForm(null, p.q); });

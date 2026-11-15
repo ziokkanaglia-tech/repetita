@@ -58,4 +58,4 @@ onInput('draft.name', v => { if (ui.draft) ui.draft.name = v; });
 onInput('draft.item', (v, d) => { if (ui.draft) ui.draft.items[+d.i][d.f] = d.f === 'rest' ? +v : v; });
 on('draft.move', d => { moveIn(ui.draft.items, +d.i, +d.dir); render(); });
 on('draft.remove', d => { ui.draft.items.splice(+d.i, 1); render(); });
-on('draft.addSuggested', d => { ui.draft.items.push(newRoutineItem(d.id, S().settings.rest)); render(); toast(getEx(S(), d.id).name + ' aggiunto'); });
+on('draft.addSuggested', d => { ui.draft.items.push(newRoutineItem(d.id, S().settings.rest, W.routineReps(S()))); render(); toast(getEx(S(), d.id).name + ' aggiunto'); });

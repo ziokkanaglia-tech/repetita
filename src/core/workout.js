@@ -5,6 +5,7 @@ import { TYPES } from './catalog.js';
 import { newSet, newItem, newRoutineItem, touch } from './model.js';
 import { getEx, lastSession, recomputePRs, work } from './metrics.js';
 import { uid, has, clone, moveIn } from './util.js';
+import { defaultReps, normProfile, currentWeight } from './profile.js';
 
 const restOf = (state, it) => it.rest ?? state.settings.rest;
 
@@ -100,7 +101,7 @@ export function deleteWorkout(state, id) {
 // ---- schede
 export const newRoutineDraft = () => ({ id: null, name: '', items: [] });
 export const draftFromWorkout = (state, w) => ({
-  id: null, name: w.name, items: w.items.map(it => ({ ...newRoutineItem(it.exId, restOf(state, it)), sets: work(it.sets).length || 1, note: it.note || '' }))
+  id: null, name: w.name, items: w.items.map(it => ({ ...newRoutineItem(it.exId, restOf(state, it), defaultReps(state.profile)), sets: work(it.sets).length || 1, note: it.note || '' }))
 });
 export function saveRoutine(state, draft) {
   const r = { id: draft.id || uid(), name: (draft.name || '').trim() || `Scheda ${state.routines.length + 1}`,
@@ -130,3 +131,13 @@ export function toggleFav(state, id) { const e = state.exercises.find(x => x.id 
 export function hideExercise(state, id) { const e = state.exercises.find(x => x.id === id); if (e) e.hidden = true; }
 export function addMeasure(state, m) { state.body.push({ id: uid(), ...m }); }
 export function deleteMeasure(state, id) { state.body = state.body.filter(b => b.id !== id); }
+
+// ---- profilo
+/** Salva il profilo. Se il peso è cambiato, aggiunge una misura con la data di oggi. */
+export function saveProfile(state, data, { weight, today } = {}) {
+  state.profile = normProfile({ ...state.profile, ...data });
+  const w = parseFloat(String(weight ?? '').replace(',', '.'));
+  if (Number.isFinite(w) && w > 20 && w < 400 && w !== currentWeight(state)) state.body.push({ id: uid(), date: today, weight: w, waist: '', fat: '' });
+  return state.profile;
+}
+export const routineReps = state => defaultReps(state.profile);

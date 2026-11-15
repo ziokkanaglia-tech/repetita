@@ -11,6 +11,7 @@ import './ui/views/routines.js';
 import './ui/views/history.js';
 import './ui/views/progress.js';
 import './ui/views/settings.js';
+import './ui/views/profile.js';
 
 store.init(store.localAdapter(), { error: () => toast('Non riesco a salvare: memoria del telefono piena?', { ms: 4000 }) });
 applyTheme(store.getState().settings);

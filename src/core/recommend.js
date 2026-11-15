@@ -4,6 +4,7 @@
 import { PATTERNS } from './catalog.js';
 import { getEx, visibleExercises, index, work } from './metrics.js';
 import { sum, DAY } from './util.js';
+import { excluded } from './profile.js';
 
 const OPPOSITES = [['Petto', 'Schiena'], ['Quadricipiti', 'Femorali'], ['Bicipiti', 'Tricipiti']];
 const MAJOR = ['Petto', 'Schiena', 'Spalle', 'Quadricipiti', 'Femorali', 'Glutei', 'Bicipiti', 'Tricipiti', 'Addome'];
@@ -27,12 +28,13 @@ export function profile(state, days = 60, now = Date.now()) {
     for (const a of ms) for (const b of ms) if (a !== b) { pair[a] = pair[a] || {}; pair[a][b] = (pair[a][b] || 0) + 1; }
   }
   const eqTot = sum(Object.values(eq)) || 1;
-  return { cnt, mus, eq, pair, total, now, last: index(state).last, eqPref: e => (eq[e] || 0) / eqTot };
+  const prof = state.profile || null;
+  return { cnt, mus, eq, pair, total, now, prof, avoidM: new Set(prof ? prof.avoid : []), last: index(state).last, eqPref: e => (eq[e] || 0) / eqTot };
 }
 
 /** Quanto un esercizio è adatto a te: attrezzi che usi, preferiti, novità, non appena fatto. */
 function score(c, P, avoid) {
-  if (c.hidden || (avoid && avoid.has(c.id))) return -1;
+  if (c.hidden || (avoid && avoid.has(c.id)) || excluded(P.prof, c)) return -1;
   let s = 1 + P.eqPref(c.equip) * 3;
   if (c.fav) s += 2.5;
   const last = P.last[c.id];
@@ -67,6 +69,7 @@ export function suggestions(state, now = Date.now()) {
     const x = P.mus[a] || 0, y = P.mus[b] || 0, hi = Math.max(x, y), lo = Math.min(x, y);
     if (hi >= MIN_SETS && lo < hi * 0.5) {
       const low = x < y ? a : b, high = x < y ? b : a;
+      if (P.avoidM.has(low)) continue;
       add(bestFor(state, low, P, used)[0], 'Equilibrio', `Nell'ultimo mese ${high.toLowerCase()} ${hi} serie, ${low.toLowerCase()} ${lo ? 'solo ' + lo : 'nessuna'}`);
     }
   }
@@ -74,7 +77,7 @@ export function suggestions(state, now = Date.now()) {
   const median = trained.length ? trained[Math.floor(trained.length / 2)] : 0;
   for (const m of MAJOR) {
     const v = P.mus[m] || 0;
-    if (median >= MIN_SETS && v < median * 0.25 && !out.some(o => o.ex.muscle === m))
+    if (median >= MIN_SETS && v < median * 0.25 && !P.avoidM.has(m) && !out.some(o => o.ex.muscle === m))
       add(bestFor(state, m, P, used)[0], 'Poco allenato', v ? `Solo ${v} serie di ${m.toLowerCase()} in 30 giorni` : `Nessuna serie di ${m.toLowerCase()} in 30 giorni`);
   }
   const top = Object.entries(P.mus).filter(([m]) => m !== 'Cardio').sort((a, b) => b[1] - a[1]).slice(0, 3);   // 3) novità
@@ -105,7 +108,7 @@ export function suggestForItems(state, exIds, n = 4, now = Date.now()) {
     co[b].tot += c;
     if (c > co[b].top) { co[b].top = c; co[b].withM = m; }      // il muscolo con cui lo abbini più spesso
   }
-  for (const [m, x] of Object.entries(co).sort((a, b) => b[1].tot - a[1].tot).slice(0, 2))
+  for (const [m, x] of Object.entries(co).filter(([m]) => !P.avoidM.has(m)).sort((a, b) => b[1].tot - a[1].tot).slice(0, 2))
     add(bestFor(state, m, P, avoid)[0], `Di solito abbini ${m.toLowerCase()} a ${x.withM.toLowerCase()} (${x.top} volte)`);
   for (const m of ms) {                                      // un movimento che qui manca
     if (m === 'Cardio') continue;

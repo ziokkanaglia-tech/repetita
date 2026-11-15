@@ -15,9 +15,9 @@ import { dLong } from '../../core/util.js';
 const S = () => store.getState();
 const toggle = (label, key, val) => html`<label class="list-item"><span class="grow">${label}</span><input type="checkbox" data-in="settings.set" data-k="${key}" ${val ? 'checked' : ''}></label>`;
 
-view('altro', st => {
+view('settings', st => {
   const s = st.settings, standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
-  return { title: 'Altro', body: html`
+  return { title: 'Impostazioni', body: html`
     ${!standalone && html`<div class="card small"><b>Installala sul telefono</b><div class="muted">In Safari tocca Condividi e poi «Aggiungi alla schermata Home». Si aprirà a tutto schermo come un'app.</div></div>`}
     <button class="routine" data-a="lib.open"><div class="grow"><div class="t1">Esercizi</div><div class="small muted">${visibleExercises(st).length} esercizi · aggiungi i tuoi</div></div>${IC.chev}</button>
     <div class="sec-title">Aspetto</div><div class="card">${seg('settings.theme', [['auto', 'Automatico'], ['light', 'Chiaro'], ['dark', 'Scuro']], s.theme)}
@@ -29,7 +29,7 @@ view('altro', st => {
       <div class="grid2 gap"><button class="btn acc" data-a="backup.export">Esporta</button><button class="btn" data-a="backup.import">Importa</button></div>
       <input type="file" id="importFile" data-in="backup.file" accept="application/json,.json" hidden></div>
     <div class="sec-title">Zona pericolosa</div><button class="btn bad block" data-a="data.wipe">Cancella tutti i dati</button>
-    <div class="tiny muted center gap">Repetita 2.0 · ${st.workouts.length} allenamenti · ${st.routines.length} schede</div>` };
+    <div class="tiny muted center gap">Repetita 2.1 · ${st.workouts.length} allenamenti · ${st.routines.length} schede</div>` };
 });
 
 on('settings.theme', d => { store.update(s => { s.settings.theme = d.k; }); applyTheme(S().settings); });

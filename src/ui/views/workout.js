@@ -5,6 +5,7 @@ import { IC } from '../icons.js';
 import { sheet, closeSheet, menu, ask, askText, toast } from '../sheet.js';
 import { startRest, stopRest } from '../timer.js';
 import { restText, suggList, stats, workoutCard } from '../parts.js';
+import { avatar } from './profile.js';
 import * as store from '../../core/store.js';
 import * as W from '../../core/workout.js';
 import { COL, REST_STEPS, SET_TYPES } from '../../core/catalog.js';
@@ -24,18 +25,20 @@ function startView(st) {
   const sg = suggestions(st, now), last = workoutsDesc(st)[0];
   const backupDue = st.workouts.length >= 3 && now - (st.settings.lastBackup || 0) > 14 * DAY;
   const body = html`
-    <div class="card"><div class="row"><b class="grow card-title">Questa settimana</b><span class="small muted">${wk.list.length} ${wk.list.length === 1 ? 'allenamento' : 'allenamenti'}</span></div>
+    <div class="card"><div class="row"><b class="grow card-title">Questa settimana</b><span class="small muted">${wk.target ? `${wk.list.length} di ${wk.target}` : wk.list.length} ${(wk.target || wk.list.length) === 1 ? 'allenamento' : 'allenamenti'}${wk.target && wk.list.length >= wk.target ? ' ✓' : ''}</span></div>
       <div class="week">${DAYS.map((d, i) => html`<div class="day ${wk.days.has(i) ? 'on' : ''} ${i === today ? 'today' : ''}"><i>${wk.days.has(i) && IC.check}</i>${d}</div>`)}</div>
       <div class="hero-stats"><div><b>${streak(st, now)}</b><span>sett. di fila</span></div><div><b>${fmt(wk.volume / 1000)} t</b><span>sollevate</span></div><div><b>${wk.sets}</b><span>serie</span></div></div></div>
+    ${!st.profile.name && html`<button class="routine" data-a="profile.edit"><div class="badge">${IC.user}</div><div class="grow"><div class="t1">Crea il tuo profilo</div><div class="small muted">Obiettivo e dati personali, per consigli su misura</div></div>${IC.chev}</button>`}
     <button class="btn acc block lg" data-a="workout.startEmpty">${IC.plus} Inizia allenamento libero</button>
-    ${backupDue && html`<button class="routine gap" data-a="nav.tab" data-t="altro"><div class="badge warn">!</div><div class="grow small"><div class="t1">Fai un backup</div><div class="muted">I dati sono solo su questo telefono</div></div>${IC.chev}</button>`}
+    ${backupDue && html`<button class="routine gap" data-a="settings.open"><div class="badge warn">!</div><div class="grow small"><div class="t1">Fai un backup</div><div class="muted">I dati sono solo su questo telefono</div></div>${IC.chev}</button>`}
     <div class="sec-title">Le tue schede${st.routines.length > 0 && html`<button class="link" data-a="routine.new">Nuova</button>`}</div>
     ${st.routines.length ? st.routines.map(r => html`<button class="routine" data-a="workout.startRoutine" data-id="${r.id}"><div class="grow"><div class="t1 big">${r.name}</div>
         <div class="small muted ell">${r.items.length} esercizi · ${r.items.map(i => getEx(st, i.exId).name).join(', ') || 'vuota'}</div></div><span class="play">${IC.play}</span></button>`)
       : html`<button class="routine" data-a="routine.new"><div class="badge">${IC.plus}</div><div class="grow"><div class="t1">Crea la tua prima scheda</div><div class="small muted">Esercizi e serie pronti, avvii con un tocco</div></div>${IC.chev}</button>`}
     ${sg.out.length > 0 && html`<div class="sec-title">${IC.spark} Consigli per te<button class="link" data-a="prog.openSugg">Tutti</button></div><div class="card flat">${suggList(sg.out.slice(0, 2))}</div>`}
     ${last && html`<div class="sec-title">Ultimo allenamento</div>${workoutCard(st, last)}`}`;
-  return { title: h < 6 ? 'Buonanotte' : h < 13 ? 'Buongiorno' : h < 18 ? 'Buon pomeriggio' : 'Buonasera', body };
+  const hello = h < 6 ? 'Buonanotte' : h < 13 ? 'Buongiorno' : h < 18 ? 'Buon pomeriggio' : 'Buonasera', first = st.profile.name.split(' ')[0];
+  return { title: first ? `${hello}, ${first}` : hello, body, right: html`<button class="avatar-btn" data-a="nav.tab" data-t="profilo" aria-label="Profilo">${avatar(st.profile, 'sm')}</button>` };
 }
 
 function workoutView(st) {

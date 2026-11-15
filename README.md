@@ -5,7 +5,7 @@ App personale per tracciare gli allenamenti. È una web app installabile sull'iP
 ## Comandi
 
 ```bash
-npm test         # controlla la logica e l'interfaccia (21 test)
+npm test         # controlla la logica e l'interfaccia (28 test)
 npm run serve    # apre l'app su http://localhost:8765
 ```
 
@@ -19,6 +19,7 @@ src/main.js                               avvio
 src/core/     LOGICA, non sa nulla dello schermo e si prova con i test
   catalog.js    muscoli, attrezzi, movimenti, esercizi pronti
   model.js      forma dei dati e validazione (normalize)
+  profile.js    profilo: obiettivo, livello, dove ti alleni, muscoli da evitare, BMI, età
   store.js      stato, salvataggio, annulla, copie di sicurezza
   metrics.js    volume, 1RM stimato, record, andamenti
   recommend.js  motore dei consigli
@@ -33,7 +34,7 @@ src/ui/       INTERFACCIA
   parts.js      pezzi riusati (elenchi, schede, selettori)
   theme.js      tema e colore
   views/        una schermata per file
-tests/        core.test.js (logica), ui.test.js (pulsanti, file offline)
+tests/        core.test.js (logica), profile.test.js (profilo), ui.test.js (pulsanti, file offline)
 ```
 
 ## Regole del progetto
@@ -43,6 +44,10 @@ tests/        core.test.js (logica), ui.test.js (pulsanti, file offline)
 - **L'HTML si scrive con `` html`...` ``**: il testo inserito viene reso sicuro in automatico.
 - **Ogni pulsante ha `data-a="nome.azione"`** e la sua `on('nome.azione', …)`. Il test fallisce se ne manca una o se ne resta una inutilizzata.
 - **Quando aggiungi un file** in `src/`, `css/` o `icons/`, aggiungilo all'elenco in `sw.js` e cambia `VERSIONE`. Il test lo controlla.
+
+## Online
+
+https://ziokkanaglia-tech.github.io/repetita/ — GitHub Pages dal ramo `main`. Per aggiornare: `npm test`, cambia `VERSIONE` in `sw.js`, poi commit e `git push`.
 
 ## Dati
 

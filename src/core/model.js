@@ -2,6 +2,7 @@
 // versione vecchia) passa da normalize(): quello che esce ha sempre la forma giusta.
 import { MUSCLES, EQUIP, PATTERNS, TYPES, SET_FIELDS, SET_TYPES, presetExercises } from './catalog.js';
 import { uid, has, isoDay } from './util.js';
+import { normProfile } from './profile.js';
 
 export const SCHEMA = 2;
 export const ACCENTS = {
@@ -15,7 +16,7 @@ export const touch = state => { state.rev = (state.rev || 0) + 1; return state; 
 
 export const newSet = (t = 'n') => ({ t, done: false });
 export const newItem = (exId, rest, sets = 3) => ({ exId, rest, note: '', ss: false, sets: Array.from({ length: sets }, () => newSet()) });
-export const newRoutineItem = (exId, rest) => ({ exId, sets: 3, reps: '', rest, note: '' });
+export const newRoutineItem = (exId, rest, reps = '') => ({ exId, sets: 3, reps, rest, note: '' });
 
 const str = (v, d = '') => (typeof v === 'string' ? v : v == null ? d : String(v));
 const int = (v, d = 0) => { const n = parseInt(v, 10); return Number.isFinite(n) ? n : d; };
@@ -86,7 +87,7 @@ export function normalize(raw) {
     ? { end: Number(r.timer.end), total: Number(r.timer.total) } : null;
 
   return {
-    v: SCHEMA, rev: 0, exercises, settings, timer,
+    v: SCHEMA, rev: 0, exercises, settings, timer, profile: normProfile(r.profile),
     routines: arr(r.routines).filter(x => x && typeof x === 'object').map(x => ({
       id: id(x.id), name: str(x.name, 'Scheda') || 'Scheda',
       items: arr(x.items).filter(i => i && has(i.exId)).map(i => ({ exId: String(i.exId), sets: Math.max(1, int(i.sets, 3)), reps: str(i.reps), rest: Math.max(0, int(i.rest, settings.rest)), note: str(i.note) }))
