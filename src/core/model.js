@@ -9,8 +9,7 @@ export const ACCENTS = {
   blu: ['#3d7bff', '#fff'], verde: ['#22c55e', '#fff'], arancio: ['#ff7a1a', '#fff'],
   viola: ['#8b5cf6', '#fff'], rosso: ['#f43f5e', '#fff'], lime: ['#c6f135', '#14170a']
 };
-export const DEFAULT_SETTINGS = { rest: 90, rpe: false, sound: true, wake: true, lastBackup: 0, theme: 'auto', accent: 'blu', aiModel: 'claude-opus-5-5' };
-export const AI_MODELS = ['claude-opus-5-5', 'claude-sonnet-5-5', 'claude-haiku-5-5'];
+export const DEFAULT_SETTINGS = { rest: 90, rpe: false, sound: true, wake: true, lastBackup: 0, theme: 'auto', accent: 'blu' };
 
 /** Segna che lo stato è cambiato: invalida gli indici calcolati (vedi metrics.js). */
 export const touch = state => { state.rev = (state.rev || 0) + 1; return state; };
@@ -66,15 +65,6 @@ function normExercise(e) {
   };
 }
 
-/** Conversazione col coach: messaggi nel formato dell'API, più la spesa stimata. */
-function normCoach(c) {
-  const r = c && typeof c === 'object' ? c : {};
-  const ok = m => m && (m.role === 'user' || m.role === 'assistant') && (typeof m.content === 'string' || Array.isArray(m.content));
-  const messages = arr(r.messages).filter(ok).map(m => ({ role: m.role, content: m.content, ...(m.cost ? { cost: Number(m.cost) || 0 } : {}), ...(m.saved ? { saved: arr(m.saved).map(String) } : {}) }));
-  while (messages.length && messages[0].role !== 'user') messages.shift();      // l'API vuole che si parta dall'utente
-  return { messages, spent: Math.max(0, Number(r.spent) || 0), asked: Math.max(0, int(r.asked, 0)) };
-}
-
 /** Rende valido uno stato qualsiasi. Non lancia mai errori: scarta quello che non capisce. */
 export function normalize(raw) {
   const r = raw && typeof raw === 'object' ? raw : {};
@@ -92,13 +82,12 @@ export function normalize(raw) {
   settings.lastBackup = Number(s.lastBackup) || 0;
   settings.theme = oneOf(s.theme, ['auto', 'light', 'dark'], 'auto');
   settings.accent = oneOf(s.accent, Object.keys(ACCENTS), 'blu');
-  settings.aiModel = oneOf(s.aiModel, AI_MODELS, AI_MODELS[0]);
 
   const timer = r.timer && Number.isFinite(Number(r.timer.end)) && Number(r.timer.total) > 0
     ? { end: Number(r.timer.end), total: Number(r.timer.total) } : null;
 
   return {
-    v: SCHEMA, rev: 0, exercises, settings, timer, profile: normProfile(r.profile), coach: normCoach(r.coach),
+    v: SCHEMA, rev: 0, exercises, settings, timer, profile: normProfile(r.profile),
     routines: arr(r.routines).filter(x => x && typeof x === 'object').map(x => ({
       id: id(x.id), name: str(x.name, 'Scheda') || 'Scheda',
       items: arr(x.items).filter(i => i && has(i.exId)).map(i => ({ exId: String(i.exId), sets: Math.max(1, int(i.sets, 3)), reps: str(i.reps), rest: Math.max(0, int(i.rest, settings.rest)), note: str(i.note) }))

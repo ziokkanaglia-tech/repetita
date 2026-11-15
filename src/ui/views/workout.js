@@ -35,7 +35,6 @@ function startView(st) {
     ${st.routines.length ? st.routines.map(r => html`<button class="routine" data-a="workout.startRoutine" data-id="${r.id}"><div class="grow"><div class="t1 big">${r.name}</div>
         <div class="small muted ell">${r.items.length} esercizi · ${r.items.map(i => getEx(st, i.exId).name).join(', ') || 'vuota'}</div></div><span class="play">${IC.play}</span></button>`)
       : html`<button class="routine" data-a="routine.new"><div class="badge">${IC.plus}</div><div class="grow"><div class="t1">Crea la tua prima scheda</div><div class="small muted">Esercizi e serie pronti, avvii con un tocco</div></div>${IC.chev}</button>`}
-    <button class="routine coach-cta" data-a="nav.tab" data-t="coach"><div class="badge">${IC.spark}</div><div class="grow"><div class="t1">Chiedi al coach</div><div class="small muted">Schede, analisi e dubbi, con la ricerca scientifica</div></div>${IC.chev}</button>
     ${sg.out.length > 0 && html`<div class="sec-title">${IC.spark} Consigli per te<button class="link" data-a="prog.openSugg">Tutti</button></div><div class="card flat">${suggList(sg.out.slice(0, 2))}</div>`}
     ${last && html`<div class="sec-title">Ultimo allenamento</div>${workoutCard(st, last)}`}`;
   const hello = h < 6 ? 'Buonanotte' : h < 13 ? 'Buongiorno' : h < 18 ? 'Buon pomeriggio' : 'Buonasera', first = st.profile.name.split(' ')[0];

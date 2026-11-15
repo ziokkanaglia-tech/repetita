@@ -29,7 +29,7 @@ view('settings', st => {
       <div class="grid2 gap"><button class="btn acc" data-a="backup.export">Esporta</button><button class="btn" data-a="backup.import">Importa</button></div>
       <input type="file" id="importFile" data-in="backup.file" accept="application/json,.json" hidden></div>
     <div class="sec-title">Zona pericolosa</div><button class="btn bad block" data-a="data.wipe">Cancella tutti i dati</button>
-    <div class="tiny muted center gap">Repetita 2.2 · ${st.workouts.length} allenamenti · ${st.routines.length} schede</div>` };
+    <div class="tiny muted center gap">Repetita 2.3 · ${st.workouts.length} allenamenti · ${st.routines.length} schede</div>` };
 });
 
 on('settings.theme', d => { store.update(s => { s.settings.theme = d.k; }); applyTheme(S().settings); });

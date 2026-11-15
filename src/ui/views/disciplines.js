@@ -1,6 +1,6 @@
 // Le discipline e gli studi: la base di conoscenza, consultabile da chiunque.
 import { html, on } from '../dom.js';
-import { view, go, atRoot, navigate, ui } from '../app.js';
+import { view, go } from '../app.js';
 import { IC } from '../icons.js';
 import { closeSheet } from '../sheet.js';
 import { DISCIPLINES, EVIDENCE, PRINCIPLES } from '../../core/disciplines.js';
@@ -11,7 +11,7 @@ const sources = keys => html`<div class="card flat">${keys.map(k => { const e = 
 
 view('disciplines', st => ({
   title: 'Discipline',
-  body: html`<div class="small muted pad">Cosa dice la ricerca su come allenarsi, disciplina per disciplina. È la stessa conoscenza che usa il coach.</div>
+  body: html`<div class="small muted pad">Cosa dice la ricerca su come allenarsi, disciplina per disciplina. I consigli dell'app partono da qui.</div>
     ${Object.entries(DISCIPLINES).map(([id, d]) => html`<button class="routine" data-a="disc.open" data-id="${id}"><div class="badge">${d.short}</div>
       <div class="grow"><div class="t1">${d.name}${st.profile.disciplines[0] === id ? html` <span class="chip k-Da">La tua</span>` : st.profile.disciplines.includes(id) ? html` <span class="chip">Anche tua</span>` : ''}</div><div class="small muted">${d.tagline}</div></div>${IC.chev}</button>`)}
     <div class="sec-title">Principi validi per tutti</div>
@@ -34,15 +34,9 @@ view('discipline', (st, c) => {
       <div class="sec-title">Consigli pratici</div>
       <div class="card"><ul class="plain">${d.advice.map(a => html`<li>${a}</li>`)}</ul></div>
       <div class="sec-title">Rischi</div><div class="card small">${d.risks}</div>
-      <div class="sec-title">Fonti</div>${sources(d.evidence)}
-      <button class="btn soft block gap" data-a="disc.ask" data-id="${c.id}">${IC.spark} Chiedi al coach una scheda di ${d.name.toLowerCase()}</button>`
+      <div class="sec-title">Fonti</div>${sources(d.evidence)}`
   };
 });
 
 on('disc.list', () => { closeSheet(); go('disciplines'); });
 on('disc.open', d => go('discipline', { id: d.id }));
-on('disc.ask', d => {
-  ui.coachDraft = `Creami una scheda di ${DISCIPLINES[d.id].name.toLowerCase()} adatta a me`;
-  if (atRoot('coach')) return;
-  navigate('coach');
-});

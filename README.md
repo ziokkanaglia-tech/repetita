@@ -21,7 +21,6 @@ src/core/     LOGICA, non sa nulla dello schermo e si prova con i test
   model.js      forma dei dati e validazione (normalize)
   profile.js    profilo: discipline, obiettivo, livello, dove ti alleni, priorità, muscoli da evitare
   disciplines.js le 8 discipline, i principi generali e le fonti (vedi docs/ricerca-discipline.md)
-  coach.js      coach IA: istruzioni, contesto dell'utente, strumento «proponi_scheda», costi
   store.js      stato, salvataggio, annulla, copie di sicurezza
   metrics.js    volume, 1RM stimato, record, andamenti
   recommend.js  motore dei consigli
@@ -32,12 +31,11 @@ src/ui/       INTERFACCIA
   app.js        schede in basso, pagine, intestazione, ridisegno
   sheet.js      pannelli, menu, conferme, avvisi
   timer.js      recupero, cronometro, suono, schermo acceso
-  ai.js         collegamento con Claude (SDK ufficiale, caricato solo quando serve)
   charts.js     grafici SVG
   parts.js      pezzi riusati (elenchi, schede, selettori)
   theme.js      tema e colore
   views/        una schermata per file
-tests/        core, profile, coach (logica), ui (pulsanti, file offline)
+tests/        core, profile, disciplines (logica), ui (pulsanti, file offline)
 docs/         ricerca-discipline.md: studi e fonti della base di conoscenza
 ```
 
@@ -57,6 +55,3 @@ https://ziokkanaglia-tech.github.io/repetita/ — GitHub Pages dal ramo `main`. 
 
 Chiave `ferro.v2` nell'archivio del browser. Ogni giorno viene salvata una copia (`ferro.snap.AAAA-MM-GG`, le ultime 3): se il salvataggio principale si rovina, l'app riparte dall'ultima copia. I dati della versione 1 (`ferro.v1`) vengono portati nella nuova al primo avvio.
 
-## Coach IA
-
-Usa Claude tramite l'SDK ufficiale `@anthropic-ai/sdk` (versione fissata in `src/ui/ai.js`), caricato dal browser solo quando apri il coach. La chiave API la inserisce l'utente nell'app e resta in `localStorage` alla voce `repetita.apikey`: non entra nello stato, nei backup né nel repository. Modello predefinito Claude Opus 5.5 (scelta in Impostazioni coach), ragionamento adattivo, istruzioni e base di conoscenza in cache, riserva automatica in caso di rifiuto (`fallbacks: "default"`).

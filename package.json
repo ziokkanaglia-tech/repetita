@@ -1,6 +1,6 @@
 {
   "name": "repetita",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "private": true,
   "type": "module",
   "description": "Repetita: tracciamento allenamenti personale (web app installabile, nessuna dipendenza)",
